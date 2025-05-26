@@ -9,6 +9,8 @@ from email.mime.text import MIMEText
 from datetime import datetime
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+from predict_stock import predict_trend
+import joblib
 
 # CONFIGURATION
 SHEET_NAME = "DSE Trends"
@@ -69,7 +71,17 @@ def assess_risk(change):
         return "MEDIUM ⚠"
     else:
         return "LOW ✅"
-        
+
+# AI PREDICTIONS
+try:
+    model = joblib.load('dse_model.joblib')
+    data['AI Prediction'] = data['Security"].apply(lambda x: predict_trend(x, model)['prediction'] if predict_trend(x, model) else 'N/A')
+    data['Confidence'] = data['Security"].apply(lambda x: predict_trend(x, model)['confidence'] if predict_trend(x, model) else 0)
+except Exception as e:
+    print(f"⚠️ AI Prediction failed: {str(e)}")
+    data['AI Prediction'] = 'N/A'
+    data['Confidence'] = 0
+    
 # APPEND TO SHEET
 if not sheet.get_all_values():
     sheet.append_row(["Date", "Security", "Closing Price", "Change (%)", "Trend", "Action"])
