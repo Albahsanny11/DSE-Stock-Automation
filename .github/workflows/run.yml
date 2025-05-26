@@ -1,0 +1,32 @@
+name: DSE Stock Automation
+
+on:
+  schedule:
+    - cron: '0 7 * * *' # Runs at 10AM Tanzania time (7AM UTC)
+  workflow_dispatch:
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        pip install gspread google-auth pandas requests
+
+    - name: Decode service account key
+      run: echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_B64 }}" | base64 -d > service_account.json
+
+    - name: Run DSE bot
+      env:
+        GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+      run: |
+        python dse_bot.py
