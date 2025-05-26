@@ -10,7 +10,7 @@ from datetime import datetime
 
 # CONFIGURATION
 SHEET_NAME = "DSE Trends"
-GMAIL_TO = "your_email@gmail.com"  # change to your Gmail
+GMAIL_TO = "albahsanny@gmail.com" 
 DATE = datetime.today().strftime("%Y-%m-%d")
 
 # GOOGLE SHEETS AUTH
