@@ -26,9 +26,9 @@ jobs:
       run: echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_B64 }}" | base64 -d > service_account.json
 
     - name: Run DSE bot
-      env:
-    GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
-    TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-    TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        env:
+         GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+         TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+         TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
       run: |
        python dse_bot.py
