@@ -77,6 +77,8 @@ if not sheet.get_all_values():
 for _, row in data.iterrows():
     sheet.append_row([DATE, row["Security"], row["Closing Price"], row["Change (%)"], row["Trend"], row["Action"]])
 
+if "Risk" not in data.columns:
+    data["Risk"] = "N/A"
 # SEND EMAIL SUMMARY
 summary = "\n".join([
     f"{row['Security']}: {row['Closing Price']} TZS ({row['Trend']}) → {row['Action']} | Risk: {row['Risk']}"
@@ -97,6 +99,8 @@ with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
     smtp.login(GMAIL_TO, app_password)
     smtp.send_message(msg)
 
+print("📊 Columns in data:", data.columns.tolist())
+print("🧪 Preview row:", data.head(1).to_dict())
 print(f"✅ Email sent to {GMAIL_TO}")
 # -------------------------
 # SEND TELEGRAM ALERT
