@@ -62,6 +62,14 @@ def recommend_action(change):
 
 data["Action"] = data["Change (%)"].apply(recommend_action)
 
+def assess_risk(change):
+    if abs(change) > 5:
+        return "HIGH ⚠️"
+    elif abs(change) > 2:
+        return "MEDIUM ⚠"
+    else:
+        return "LOW ✅"
+        
 # APPEND TO SHEET
 if not sheet.get_all_values():
     sheet.append_row(["Date", "Security", "Closing Price", "Change (%)", "Trend", "Action"])
