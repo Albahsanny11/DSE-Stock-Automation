@@ -7,6 +7,8 @@ import re
 import smtplib
 from email.mime.text import MIMEText
 from datetime import datetime
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # CONFIGURATION
 SHEET_NAME = "DSE Trends"
@@ -36,7 +38,7 @@ res = requests.get(url, verify=False)
 tables = pd.read_html(res.text)
 data = tables[3]  # Adjust as needed
 
-data = data[["Symbol", "Close", "Change"]]
+data = data[["Symbol", "Close", "Change"]].copy()
 data.rename(columns={"Symbol": "Security", "Close": "Closing Price"}, inplace=True)
 data = data.dropna(subset=["Security", "Closing Price"])
 
