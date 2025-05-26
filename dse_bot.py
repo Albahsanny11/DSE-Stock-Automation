@@ -67,6 +67,7 @@ if not app_password:
     raise Exception("Missing GMAIL_APP_PASSWORD environment variable")
 
 with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+    print(f"📧 Logging in as {GMAIL_TO} with app password loaded: {'Yes' if app_password else 'No'}")
     smtp.login(GMAIL_TO, app_password)
     smtp.send_message(msg)
 
