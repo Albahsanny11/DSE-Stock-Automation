@@ -74,3 +74,21 @@ with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
     smtp.send_message(msg)
 
 print(f"✅ Email sent to {GMAIL_TO}")
+# -------------------------
+# SEND TELEGRAM ALERT
+# -------------------------
+import requests
+
+TELEGRAM_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
+TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
+
+if TELEGRAM_TOKEN and TELEGRAM_CHAT_ID:
+    telegram_url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+    telegram_msg = {
+        "chat_id": TELEGRAM_CHAT_ID,
+        "text": f"DSE Summary - {DATE}\n\n{summary}"
+    }
+    telegram_res = requests.post(telegram_url, data=telegram_msg)
+    print("✅ Telegram alert sent." if telegram_res.status_code == 200 else "❌ Failed to send Telegram alert.")
+else:
+    print("⚠️ Telegram token/chat ID missing, skipping alert.")
