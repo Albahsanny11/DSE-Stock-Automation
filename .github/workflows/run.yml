@@ -22,9 +22,14 @@ jobs:
       run: |
         pip install gspread google-auth pandas requests lxml
 
-    - name: Run daily prediction
+    - name: Install additional dependencies
       run: |
-        python predict_stock.py
+        pip install gspread google-auth pandas requests lxml scikit-learn yfinance joblib
+
+    - name: Train model (weekly)
+      run: |
+        python predict_stock.py --train
+      if: github.event_name == 'schedule' && github.event.schedule == '0 7 * * 1'  # Every Monday
 
     - name: Decode service account key
       run: echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_B64 }}" | base64 -d > service_account.json
