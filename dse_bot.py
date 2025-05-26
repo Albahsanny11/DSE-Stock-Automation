@@ -52,9 +52,22 @@ def clean_percent(val):
 data["Change (%)"] = data["Change"].apply(clean_percent)
 data["Trend"] = data["Change (%)"].apply(lambda x: "UP \U0001F4C8" if x > 0 else "DOWN \U0001F4C9" if x < 0 else "FLAT")
 
+def recommend_action(change):
+    if change > 3:
+        return "BUY 🟢"
+    elif change < -2:
+        return "SELL 🔴"
+    else:
+        return "HOLD ⚪"
+
+data["Action"] = data["Change (%)"].apply(recommend_action)
+
 # APPEND TO SHEET
+if not sheet.get_all_values():
+    sheet.append_row(["Date", "Security", "Closing Price", "Change (%)", "Trend", "Action"])
+
 for _, row in data.iterrows():
-    sheet.append_row([DATE, row["Security"], row["Closing Price"], row["Change (%)"], row["Trend"]])
+    sheet.append_row([DATE, row["Security"], row["Closing Price"], row["Change (%)"], row["Trend"], row["Action"]])
 
 # SEND EMAIL SUMMARY
 summary = "\n".join([f"{row['Security']}: {row['Closing Price']} TZS ({row['Trend']})" for _, row in data.iterrows()])
