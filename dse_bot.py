@@ -70,7 +70,10 @@ for _, row in data.iterrows():
     sheet.append_row([DATE, row["Security"], row["Closing Price"], row["Change (%)"], row["Trend"], row["Action"]])
 
 # SEND EMAIL SUMMARY
-summary = "\n".join([f"{row['Security']}: {row['Closing Price']} TZS ({row['Trend']})" for _, row in data.iterrows()])
+summary = "\n".join([
+    f"{row['Security']}: {row['Closing Price']} TZS ({row['Trend']}) → {row['Action']}"
+    for _, row in data.iterrows()
+])
 body = f"DSE Trends for {DATE}:\n\n{summary}"
 msg = MIMEText(body)
 msg["Subject"] = f"DSE Market Summary - {DATE}"
