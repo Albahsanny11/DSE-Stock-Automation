@@ -89,6 +89,11 @@ if TELEGRAM_TOKEN and TELEGRAM_CHAT_ID:
         "text": f"DSE Summary - {DATE}\n\n{summary}"
     }
     telegram_res = requests.post(telegram_url, data=telegram_msg)
-    print("✅ Telegram alert sent." if telegram_res.status_code == 200 else "❌ Failed to send Telegram alert.")
+    
+    if telegram_res.status_code == 200:
+        print("✅ Telegram alert sent.")
+    else:
+        print(f"❌ Failed to send Telegram alert. Status: {telegram_res.status_code}")
+        print(f"Response: {telegram_res.text}")
 else:
     print("⚠️ Telegram token/chat ID missing, skipping alert.")
