@@ -79,7 +79,7 @@ for _, row in data.iterrows():
 
 # SEND EMAIL SUMMARY
 summary = "\n".join([
-    f"{row['Security']}: {row['Closing Price']} TZS ({row['Trend']}) → {row['Action']}"
+    f"{row['Security']}: {row['Closing Price']} TZS ({row['Trend']}) → {row['Action']} | Risk: {row['Risk']}"
     for _, row in data.iterrows()
 ])
 body = f"DSE Trends for {DATE}:\n\n{summary}"
