@@ -10,7 +10,13 @@ from datetime import datetime
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 from predict_stock import predict_trend
+try:
 import joblib
+from predict_stock import predict_trend
+AI_ENABLED = True
+except ImportError as e:
+print(f"⚠️ AI dependencies not available: {e}")
+AI_ENABLED = False
 
 # CONFIGURATION
 SHEET_NAME = "DSE Trends"
@@ -73,12 +79,30 @@ def assess_risk(change):
         return "LOW ✅"
 
 # AI PREDICTIONS
-try:
-    model = joblib.load('dse_model.joblib')
-    data['AI Prediction'] = data['Security"].apply(lambda x: predict_trend(x, model)['prediction'] if predict_trend(x, model) else 'N/A')
-    data['Confidence'] = data['Security"].apply(lambda x: predict_trend(x, model)['confidence'] if predict_trend(x, model) else 0)
-except Exception as e:
-    print(f"⚠️ AI Prediction failed: {str(e)}")
+if AI_ENABLED:
+    try:
+        model = joblib.load('dse_model.joblib')
+        
+        def safe_predict(symbol):
+            try:
+                result = predict_trend(symbol, model)
+                return {
+                    'prediction': result.get('prediction', 'N/A'),
+                    'confidence': result.get('confidence', 0)
+                }
+            except Exception as e:
+                print(f"Prediction failed for {symbol}: {e}")
+                return {'prediction': 'N/A', 'confidence': 0}
+        
+        predictions = data['Security'].apply(lambda x: safe_predict(x))
+        data['AI Prediction'] = predictions.apply(lambda x: x['prediction'])
+        data['Confidence'] = predictions.apply(lambda x: x['confidence'])
+        
+    except Exception as e:
+        print(f"⚠️ AI Prediction system failed: {str(e)}")
+        data['AI Prediction'] = 'N/A'
+        data['Confidence'] = 0
+else:
     data['AI Prediction'] = 'N/A'
     data['Confidence'] = 0
     
