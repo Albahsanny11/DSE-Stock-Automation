@@ -90,6 +90,16 @@ def system_checks():
     except ImportError:
         print("Scikit-learn not installed")
 
+def backtest_model():
+    from predict_stock import train_model
+    train_model(['CRDB', 'NMB', 'TBL'], backtest=True)
+
+def generate_charts():
+    import matplotlib.pyplot as plt
+    data[['Closing Price', 'Change (%)']].plot()
+    plt.savefig('trends.png')
+    # Add to email as attachment
+
 
 
 # AI PREDICTIONS - Add this after your data scraping section
