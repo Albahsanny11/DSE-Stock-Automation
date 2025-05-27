@@ -41,7 +41,7 @@ jobs:
        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
       run: |
         python dse_bot.py
-
+    
     - name: System Diagnostics
       run: |
         python -c "import pandas as pd; print(pd.show_versions())"
