@@ -80,6 +80,18 @@ def assess_risk(change):
     else:
         return "LOW ✅"
 
+def system_checks():
+    import sys
+    print(f"Python version: {sys.version}")
+    print(f"Pandas version: {pd.__version__}")
+    try:
+        import sklearn
+        print(f"Scikit-learn version: {sklearn.__version__}")
+    except ImportError:
+        print("Scikit-learn not installed")
+
+
+
 # AI PREDICTIONS - Add this after your data scraping section
 if AI_ENABLED:
     try:
