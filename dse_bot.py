@@ -12,10 +12,13 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 from predict_stock import predict_trend
 import joblib
 from predict_stock import predict_trend
-AI_ENABLED = True
-except ImportError as e:
-print(f"⚠️ AI dependencies not available: {e}")
-AI_ENABLED = False
+AI_ENABLED = False  # Default to false if imports fail
+try:
+    import joblib
+    from predict_stock import predict_trend
+    AI_ENABLED = True
+except ImportError as import_err:  # Fixed syntax here
+    print(f"⚠️ AI dependencies not available: {import_err}")
 
 # CONFIGURATION
 SHEET_NAME = "DSE Trends"
@@ -77,23 +80,23 @@ def assess_risk(change):
     else:
         return "LOW ✅"
 
-# AI PREDICTIONS
+# AI PREDICTIONS - Add this after your data scraping section
 if AI_ENABLED:
     try:
         model = joblib.load('dse_model.joblib')
         
-        def safe_predict(symbol):
+        def get_prediction(symbol):
             try:
                 result = predict_trend(symbol, model)
                 return {
-                    'prediction': result.get('prediction', 'N/A'),
-                    'confidence': result.get('confidence', 0)
+                    'prediction': result['prediction'] if result else 'N/A',
+                    'confidence': result['confidence'] if result else 0
                 }
             except Exception as e:
-                print(f"Prediction failed for {symbol}: {e}")
+                print(f"Prediction failed for {symbol}: {str(e)}")
                 return {'prediction': 'N/A', 'confidence': 0}
         
-        predictions = data['Security'].apply(lambda x: safe_predict(x))
+        predictions = data['Security'].apply(get_prediction)
         data['AI Prediction'] = predictions.apply(lambda x: x['prediction'])
         data['Confidence'] = predictions.apply(lambda x: x['confidence'])
         
