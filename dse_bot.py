@@ -19,7 +19,8 @@ try:
     AI_ENABLED = True
 except ImportError as import_err:  # Fixed syntax here
     print(f"⚠️ AI dependencies not available: {import_err}")
-
+TELEGRAM_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
+TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 # CONFIGURATION
 SHEET_NAME = "DSE Trends"
 GMAIL_TO = "albahsanny@gmail.com" 
@@ -45,7 +46,7 @@ except gspread.SpreadsheetNotFound:
 # SCRAPE DSE DATA
 url = "https://www.dse.co.tz/"
 res = requests.get(url, verify=False)
-tables = pd.read_html(res.text)
+from io import StringIO
 data = tables[3]  # Adjust as needed
 
 data = data[["Symbol", "Close", "Change"]].copy()
@@ -100,7 +101,16 @@ def generate_charts():
     plt.savefig('trends.png')
     # Add to email as attachment
 
+# Add this near your other configurations
+MODEL_PATH = 'dse_model.joblib'
+AI_ENABLED = False  # Default to False if model missing
 
+if os.path.exists(MODEL_PATH):
+    try:
+        model = joblib.load(MODEL_PATH)
+        AI_ENABLED = True
+    except:
+        print("⚠️ Corrupt model file")
 
 # AI PREDICTIONS - Add this after your data scraping section
 if AI_ENABLED:
