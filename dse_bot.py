@@ -10,7 +10,6 @@ from datetime import datetime
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 from predict_stock import predict_trend
-try:
 import joblib
 from predict_stock import predict_trend
 AI_ENABLED = True
