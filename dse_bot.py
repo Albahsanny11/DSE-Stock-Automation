@@ -163,25 +163,27 @@ print("📊 Columns in data:", data.columns.tolist())
 print("🧪 Preview row:", data.head(1).to_dict())
 print(f"✅ Email sent to {GMAIL_TO}")
 # -------------------------
-# SEND TELEGRAM ALERT
-# -------------------------
-import requests
-
-TELEGRAM_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
-TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
-
+# TELEGRAM MESSAGE
 if TELEGRAM_TOKEN and TELEGRAM_CHAT_ID:
-    telegram_url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-    telegram_msg = {
-        "chat_id": TELEGRAM_CHAT_ID,
-        "text": f"DSE Summary - {DATE}\n\n{summary}"
-    }
-    telegram_res = requests.post(telegram_url, data=telegram_msg)
-    
-    if telegram_res.status_code == 200:
-        print("✅ Telegram alert sent.")
-    else:
-        print(f"❌ Failed to send Telegram alert. Status: {telegram_res.status_code}")
-        print(f"Response: {telegram_res.text}")
+    try:
+        telegram_url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+        payload = {
+            "chat_id": TELEGRAM_CHAT_ID,
+            "text": f"DSE Alert - {DATE}\n\n{summary}",
+            "parse_mode": "HTML",
+            "disable_web_page_preview": True
+        }
+        
+        # Add timeout and better error handling
+        response = requests.post(telegram_url, json=payload, timeout=10)
+        response.raise_for_status()  # Raises exception for 4XX/5XX
+        
+        print(f"✅ Telegram alert sent. Response: {response.json()}")
+    except requests.exceptions.RequestException as e:
+        print(f"❌ Telegram failed: {str(e)}")
+        if hasattr(e, 'response') and e.response:
+            print(f"Response content: {e.response.text}")
 else:
-    print("⚠️ Telegram token/chat ID missing, skipping alert.")
+    print("⚠️ Telegram credentials missing. Required env vars:")
+    print("- TELEGRAM_BOT_TOKEN")
+    print("- TELEGRAM_CHAT_ID")
