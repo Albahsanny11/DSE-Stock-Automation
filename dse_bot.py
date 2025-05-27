@@ -13,7 +13,7 @@ from predict_stock import predict_trend
 import joblib
 from predict_stock import predict_trend
 AI_ENABLED = True
- except ImportError as:
+except ImportError as e:
 print(f"⚠️ AI dependencies not available: {e}")
 AI_ENABLED = False
 
