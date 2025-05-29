@@ -37,3 +37,8 @@ jobs:
       run: |
         python dse_bot.py
 
+    - name: Install dependencies
+      run: |
+       pip install --upgrade pip
+       pip install scikit-learn yfinance pandas joblib pandas-ta
+       pip freeze > requirements.txt
