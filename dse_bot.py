@@ -69,16 +69,30 @@ def assess_risk(change):
         return "MEDIUM ⚠"
     else:
         return "LOW ✅"
-        
+def simulate_prediction():
+    return random.choice(["Likely UP 📈", "Likely DOWN 📉", "Likely FLAT ➖"])
+
+data["Change (%)"] = data["Change"].apply(clean_percent)
+data["Trend"] = data["Change (%)"].apply(lambda x: "UP 📈" if x > 0 else "DOWN 📉" if x < 0 else "FLAT")
+data["Action"] = data["Change (%)"].apply(recommend_action)
+data["Risk"] = data["Change (%)"].apply(assess_risk)
+data["Prediction"] = data.apply(lambda row: simulate_prediction(), axis=1)
+ 
 # APPEND TO SHEET
 if not sheet.get_all_values():
-    sheet.append_row(["Date", "Security", "Closing Price", "Change (%)", "Trend", "Action"])
+    sheet.append_row(["Date", "Security", "Closing Price", "Change (%)", "Trend", "Action", "Risk", "Prediction"])
 
 for _, row in data.iterrows():
-    sheet.append_row([DATE, row["Security"], row["Closing Price"], row["Change (%)"], row["Trend"], row["Action"]])
-
-if "Risk" not in data.columns:
-    data["Risk"] = "N/A"
+    sheet.append_row([
+        DATE,
+        row["Security"],
+        row["Closing Price"],
+        row["Change (%)"],
+        row["Trend"],
+        row["Action"],
+        row["Risk"],
+        row["Prediction"]
+    ])
 # SEND EMAIL SUMMARY
 summary = "\n".join([
     f"{row['Security']}: {row['Closing Price']} TZS ({row['Trend']}) → {row['Action']} | Risk: {row['Risk']}"
