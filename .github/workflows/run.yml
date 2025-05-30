@@ -42,3 +42,11 @@ jobs:
        pip install --upgrade pip
        pip install scikit-learn yfinance pandas joblib pandas-ta
        pip freeze > requirements.txt
+    - name: Install dependencies
+      run: |
+        python -m venv venv
+        source venv/bin/activate
+        pip install --upgrade pip
+        pip install scikit-learn==1.3.0 yfinance==0.2.18 pandas==2.0.3 joblib==1.3.2 pandas-ta==0.3.14
+        pip list | grep -E "scikit-learn|yfinance|pandas|joblib"
+        pip freeze > requirements.txt
