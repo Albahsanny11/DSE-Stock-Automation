@@ -20,7 +20,8 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install gspread google-auth pandas requests lxml
+       pip install gspread google-auth pandas requests lxml scikit-learn yfinance joblib
+
 
     - name: Run daily prediction
       run: |
