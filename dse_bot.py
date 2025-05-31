@@ -78,7 +78,18 @@ data["Trend"] = data["Change (%)"].apply(lambda x: "UP 📈" if x > 0 else "DOWN
 data["Action"] = data["Change (%)"].apply(recommend_action)
 data["Risk"] = data["Change (%)"].apply(assess_risk)
 data["Prediction"] = data.apply(lambda row: simulate_prediction(), axis=1)
- 
+# Sort and get top gainers and losers
+gainers = data.sort_values(by="Change (%)", ascending=False).head(3)
+losers = data.sort_values(by="Change (%)", ascending=True).head(3)
+
+gainers_text = "\n".join([
+    f"{row['Security']}: {row['Closing Price']} TZS (+{row['Change (%)']}%) {row['Trend']}"
+    for _, row in gainers.iterrows()
+])
+losers_text = "\n".join([
+    f"{row['Security']}: {row['Closing Price']} TZS ({row['Change (%)']}%) {row['Trend']}"
+    for _, row in losers.iterrows()
+]) 
 # APPEND TO SHEET
 if not sheet.get_all_values():
     sheet.append_row(["Date", "Security", "Closing Price", "Change (%)", "Trend", "Action", "Risk", "Prediction"])
@@ -94,7 +105,32 @@ for _, row in data.iterrows():
         row["Risk"],
         row["Prediction"]
     ])
+# 7-Day Summary
+all_values = sheet.get_all_values()
+df_sheet = pd.DataFrame(all_values[1:], columns=all_values[0])
+df_sheet["Date"] = pd.to_datetime(df_sheet["Date"], errors='coerce')
+df_sheet["Closing Price"] = pd.to_numeric(df_sheet["Closing Price"], errors='coerce')
+df_sheet = df_sheet.dropna(subset=["Date", "Closing Price"])
+seven_days_ago = datetime.today() - timedelta(days=7)
+recent = df_sheet[df_sheet["Date"] >= seven_days_ago]
+summary_7d = recent.groupby("Security")["Closing Price"].agg(['first', 'last'])
+summary_7d["Change (%)"] = ((summary_7d["last"] - summary_7d["first"]) / summary_7d["first"] * 100).round(2)
+summary_7d.reset_index(inplace=True)
+summary_table_text = "\n".join([
+    f"{row['Security']}: {row['first']} → {row['last']} TZS ({row['Change (%)']}%)"
+    for _, row in summary_7d.iterrows()
+])
 # SEND EMAIL SUMMARY
+summary = f"""
+📈 Top Gainers:
+{gainers_text}
+
+📉 Top Losers:
+{losers_text}
+
+📆 7-Day Summary:
+{summary_table_text}
+
 summary = "\n".join([
     f"{row['Security']}: {row['Closing Price']} TZS ({row['Trend']}) → {row['Action']} | Risk: {row['Risk']}"
     for _, row in data.iterrows()
@@ -126,11 +162,11 @@ if TELEGRAM_TOKEN and TELEGRAM_CHAT_ID:
         telegram_url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
         payload = {
             "chat_id": TELEGRAM_CHAT_ID,
-            "text": f"DSE Alert - {DATE}\n\n{summary}",
-            "parse_mode": "HTML",
-            "disable_web_page_preview": True
-        }
-        
+            "text": f"📈 Top Gainers:\n{gainers_text}\n\n📉 Top Losers:\n{losers_text}\n\n📆 7-Day Summary:\n{summary_table_text}\n\n📊 Full Summary:\n" + "\n".join([
+            f"{row['Security']}: {row['Closing Price']} TZS ({row['Trend']}) → {row['Action']}"
+            for _, row in data.iterrows()
+        ])
+    }
         # Add timeout and better error handling
         response = requests.post(telegram_url, json=payload, timeout=10)
         response.raise_for_status()  # Raises exception for 4XX/5XX
