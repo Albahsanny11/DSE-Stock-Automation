@@ -107,19 +107,25 @@ for _, row in data.iterrows():
     ])
 # 7-Day Summary
 all_values = sheet.get_all_values()
-df_sheet = pd.DataFrame(all_values[1:], columns=all_values[0])
-df_sheet["Date"] = pd.to_datetime(df_sheet["Date"], errors='coerce')
-df_sheet["Closing Price"] = pd.to_numeric(df_sheet["Closing Price"], errors='coerce')
-df_sheet = df_sheet.dropna(subset=["Date", "Closing Price"])
-seven_days_ago = datetime.today() - timedelta(days=7)
-recent = df_sheet[df_sheet["Date"] >= seven_days_ago]
-summary_7d = recent.groupby("Security")["Closing Price"].agg(['first', 'last'])
-summary_7d["Change (%)"] = ((summary_7d["last"] - summary_7d["first"]) / summary_7d["first"] * 100).round(2)
-summary_7d.reset_index(inplace=True)
-summary_table_text = "\n".join([
-    f"{row['Security']}: {row['first']} → {row['last']} TZS ({row['Change (%)']}%)"
-    for _, row in summary_7d.iterrows()
-])
+
+# Ensure headers exist
+if not all_values or "Date" not in all_values[0]:
+    print("⚠️ Skipping 7-day summary: 'Date' column not found.")
+    summary_table_text = "No sufficient data for 7-day summary."
+else:
+    df_sheet = pd.DataFrame(all_values[1:], columns=all_values[0])
+    df_sheet["Date"] = pd.to_datetime(df_sheet["Date"], errors='coerce')
+    df_sheet["Closing Price"] = pd.to_numeric(df_sheet["Closing Price"], errors='coerce')
+    df_sheet = df_sheet.dropna(subset=["Date", "Closing Price"])
+    seven_days_ago = datetime.today() - timedelta(days=7)
+    recent = df_sheet[df_sheet["Date"] >= seven_days_ago]
+    summary_7d = recent.groupby("Security")["Closing Price"].agg(['first', 'last'])
+    summary_7d["Change (%)"] = ((summary_7d["last"] - summary_7d["first"]) / summary_7d["first"] * 100).round(2)
+    summary_7d.reset_index(inplace=True)
+    summary_table_text = "\n".join([
+        f"{row['Security']}: {row['first']} → {row['last']} TZS ({row['Change (%)']}%)"
+        for _, row in summary_7d.iterrows()
+    ])
 # SEND EMAIL SUMMARY
 summary = f"""
 📈 Top Gainers:
