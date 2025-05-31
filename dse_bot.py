@@ -80,7 +80,7 @@ data["Risk"] = data["Change (%)"].apply(assess_risk)
 data["Prediction"] = data.apply(lambda row: simulate_prediction(), axis=1)
 # Sort and get top gainers and losers
 gainers = data.sort_values(by="Change (%)", ascending=False).head(3)
-losers = data.sort_values(by="Change (%)", ascending=True).head(3)
+losers = data[data["Change (%)"] < 0].sort_values(by="Change (%)", ascending=True).head(3))
 
 gainers_text = "\n".join([
     f"{row['Security']}: {row['Closing Price']} TZS (+{row['Change (%)']}%) {row['Trend']}"
