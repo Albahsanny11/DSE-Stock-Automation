@@ -131,8 +131,8 @@ summary = f"""
 📆 7-Day Summary:
 {summary_table_text}
 
-summary = "\n".join([
-    f"{row['Security']}: {row['Closing Price']} TZS ({row['Trend']}) → {row['Action']} | Risk: {row['Risk']}"
+""" + "\n".join([
+    f"{row['Security']}: {row['Closing Price']} TZS ({row['Trend']}) → {row['Action']} | Risk: {row['Risk']} | {row['Prediction']}"
     for _, row in data.iterrows()
 ])
 body = f"DSE Trends for {DATE}:\n\n{summary}"
@@ -154,7 +154,7 @@ print("📊 Columns in data:", data.columns.tolist())
 print("🧪 Preview row:", data.head(1).to_dict())
 print(f"✅ Email sent to {GMAIL_TO}")
 # -------------------------
-# SENDE TELEGRAM ALERT
+# SEND TELEGRAM ALERT
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 if TELEGRAM_TOKEN and TELEGRAM_CHAT_ID:
