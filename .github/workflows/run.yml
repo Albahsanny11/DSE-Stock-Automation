@@ -32,6 +32,7 @@ jobs:
        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
       run: |
         python dse_bot.py
+        python dse_reports_scraper.py
     - name: Install dependencies
       run: |
        pip install --upgrade pip
@@ -45,3 +46,5 @@ jobs:
         pip install scikit-learn==1.3.0 yfinance==0.2.18 pandas==2.0.3 joblib==1.3.2 pandas-ta==0.3.14b0
         pip list | grep -E "scikit-learn|yfinance|pandas|joblib"
         pip freeze > requirements.txt
+        pip install requests beautifulsoup4
+
