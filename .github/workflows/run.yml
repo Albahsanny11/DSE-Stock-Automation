@@ -47,4 +47,6 @@ jobs:
         pip list | grep -E "scikit-learn|yfinance|pandas|joblib"
         pip freeze > requirements.txt
         pip install requests beautifulsoup4
+        pip install pdfplumber
+
 
