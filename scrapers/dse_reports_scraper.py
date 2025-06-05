@@ -7,6 +7,7 @@ import urllib3
 import pdfplumber
 import re
 import csv
+import pandas as pd
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -49,7 +50,7 @@ def download_reports(report_links):
             downloaded_files.append(save_path)
     return downloaded_files
 
-def extract_financial_metrics(pdf_path):
+def extract_financial_metrics_pdf(pdf_path):
     metrics = {
         "filename": os.path.basename(pdf_path),
         "Revenue": None,
@@ -73,12 +74,49 @@ def extract_financial_metrics(pdf_path):
                 for line in lines:
                     for key, pattern in keywords.items():
                         if metrics[key] is None and pattern.search(line):
-                            # Find numbers (remove commas)
                             numbers = re.findall(r"[\d,]+(?:\.\d+)?", line.replace(',', ''))
                             if numbers:
                                 metrics[key] = numbers[0]
     except Exception as e:
         print(f"Error processing {pdf_path}: {e}")
+
+    return metrics
+
+def extract_financial_metrics_excel(excel_path):
+    metrics = {
+        "filename": os.path.basename(excel_path),
+        "Revenue": None,
+        "Net Profit": None,
+        "EPS": None
+    }
+
+    keywords = {
+        "Revenue": re.compile(r"Revenue", re.I),
+        "Net Profit": re.compile(r"Net\s*Profit", re.I),
+        "EPS": re.compile(r"Earnings\s*Per\s*Share|EPS", re.I)
+    }
+
+    try:
+        xls = pd.ExcelFile(excel_path)
+        for sheet in xls.sheet_names:
+            df = pd.read_excel(xls, sheet_name=sheet, dtype=str)
+            # Flatten dataframe to 1D list of strings for search
+            values = df.fillna('').astype(str).values.flatten()
+            for val in values:
+                for key, pattern in keywords.items():
+                    if metrics[key] is None and pattern.search(val):
+                        # Try to find number near the keyword (in the dataframe)
+                        # Look in the same row for numbers
+                        row_idx = df.apply(lambda row: row.astype(str).str.contains(val, case=False, regex=False)).any(axis=1)
+                        if row_idx.any():
+                            row = df.loc[row_idx].astype(str)
+                            nums = row.apply(lambda x: x.str.extract(r'([\d,.]+)').dropna(), axis=1)
+                            nums = pd.concat(nums.values)
+                            if not nums.empty:
+                                number = nums.iloc[0, 0].replace(',', '')
+                                metrics[key] = number
+    except Exception as e:
+        print(f"Error processing {excel_path}: {e}")
 
     return metrics
 
@@ -93,14 +131,16 @@ def save_metrics_to_csv(metrics_list, csv_path=CSV_OUTPUT):
 if __name__ == "__main__":
     links = fetch_report_links()
     downloaded_files = download_reports(links)
-    
-    pdf_files = [f for f in downloaded_files if f.lower().endswith(".pdf")]
+
     all_metrics = []
 
-    print("Extracting financial metrics from PDFs...")
-    for pdf in pdf_files:
-        metrics = extract_financial_metrics(pdf)
-        all_metrics.append(metrics)
+    for fpath in downloaded_files:
+        if fpath.lower().endswith(".pdf"):
+            metrics = extract_financial_metrics_pdf(fpath)
+            all_metrics.append(metrics)
+        elif fpath.lower().endswith((".xls", ".xlsx")):
+            metrics = extract_financial_metrics_excel(fpath)
+            all_metrics.append(metrics)
 
     save_metrics_to_csv(all_metrics)
     print(f"✅ Done! Financial metrics saved to {CSV_OUTPUT}")
