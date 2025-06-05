@@ -3,6 +3,9 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
 from urllib.parse import urljoin
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 
 # Target URL
 BASE_URL = "https://www.dse.co.tz"
@@ -13,7 +16,7 @@ DOWNLOAD_DIR = os.path.join("reports", "DSE")
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
 def fetch_report_links():
-    response = requests.get(REPORTS_URL)
+    response = requests.get(REPORTS_URL, verify=False)
     soup = BeautifulSoup(response.content, 'html.parser')
 
     # Look for all download links (PDFs, Excel, etc.)
