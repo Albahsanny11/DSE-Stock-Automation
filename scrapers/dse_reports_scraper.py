@@ -4,22 +4,25 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 from urllib.parse import urljoin
 import urllib3
+import pdfplumber
+import re
+import csv
+
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-
-# Target URL
+# Constants
 BASE_URL = "https://www.dse.co.tz"
 REPORTS_URL = "https://www.dse.co.tz/market-reports"
 DOWNLOAD_DIR = os.path.join("reports", "DSE")
+CSV_OUTPUT = os.path.join(DOWNLOAD_DIR, "financial_metrics.csv")
 
-# Make sure the folder exists
+# Ensure download directory exists
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
 def fetch_report_links():
     response = requests.get(REPORTS_URL, verify=False)
     soup = BeautifulSoup(response.content, 'html.parser')
 
-    # Look for all download links (PDFs, Excel, etc.)
     report_links = []
     for link in soup.find_all('a', href=True):
         href = link['href']
@@ -29,20 +32,75 @@ def fetch_report_links():
     return report_links
 
 def download_reports(report_links):
+    downloaded_files = []
     for url in report_links:
         filename = url.split("/")[-1]
         date_prefix = datetime.now().strftime("%Y-%m-%d")
         save_path = os.path.join(DOWNLOAD_DIR, f"{date_prefix}_{filename}")
 
-        if not os.path.exists(save_path):  # avoid re-downloading
+        if not os.path.exists(save_path):
             print(f"Downloading: {filename}")
             r = requests.get(url)
             with open(save_path, "wb") as f:
                 f.write(r.content)
+            downloaded_files.append(save_path)
         else:
             print(f"Already downloaded: {filename}")
+            downloaded_files.append(save_path)
+    return downloaded_files
+
+def extract_financial_metrics(pdf_path):
+    metrics = {
+        "filename": os.path.basename(pdf_path),
+        "Revenue": None,
+        "Net Profit": None,
+        "EPS": None
+    }
+
+    keywords = {
+        "Revenue": re.compile(r"Revenue", re.I),
+        "Net Profit": re.compile(r"Net\s*Profit", re.I),
+        "EPS": re.compile(r"Earnings\s*Per\s*Share|EPS", re.I)
+    }
+
+    try:
+        with pdfplumber.open(pdf_path) as pdf:
+            for page in pdf.pages:
+                text = page.extract_text()
+                if not text:
+                    continue
+                lines = text.split('\n')
+                for line in lines:
+                    for key, pattern in keywords.items():
+                        if metrics[key] is None and pattern.search(line):
+                            # Find numbers (remove commas)
+                            numbers = re.findall(r"[\d,]+(?:\.\d+)?", line.replace(',', ''))
+                            if numbers:
+                                metrics[key] = numbers[0]
+    except Exception as e:
+        print(f"Error processing {pdf_path}: {e}")
+
+    return metrics
+
+def save_metrics_to_csv(metrics_list, csv_path=CSV_OUTPUT):
+    keys = ["filename", "Revenue", "Net Profit", "EPS"]
+    with open(csv_path, "w", newline="", encoding='utf-8') as f:
+        writer = csv.DictWriter(f, fieldnames=keys)
+        writer.writeheader()
+        for data in metrics_list:
+            writer.writerow(data)
 
 if __name__ == "__main__":
     links = fetch_report_links()
-    download_reports(links)
-    print("✅ Finished downloading DSE market reports.")
+    downloaded_files = download_reports(links)
+    
+    pdf_files = [f for f in downloaded_files if f.lower().endswith(".pdf")]
+    all_metrics = []
+
+    print("Extracting financial metrics from PDFs...")
+    for pdf in pdf_files:
+        metrics = extract_financial_metrics(pdf)
+        all_metrics.append(metrics)
+
+    save_metrics_to_csv(all_metrics)
+    print(f"✅ Done! Financial metrics saved to {CSV_OUTPUT}")
