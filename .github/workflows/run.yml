@@ -50,4 +50,6 @@ jobs:
         pip install pdfplumber
         pip install requests beautifulsoup4 pdfplumber pandas openpyxl
         pip install schedule
+        pip install pandas openpyxl
+
 
