@@ -48,5 +48,4 @@ jobs:
         pip freeze > requirements.txt
         pip install requests beautifulsoup4
         pip install pdfplumber
-
-
+        pip install requests beautifulsoup4 pdfplumber pandas openpyxl
