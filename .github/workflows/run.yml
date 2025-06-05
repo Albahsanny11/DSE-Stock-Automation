@@ -32,7 +32,7 @@ jobs:
        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
       run: |
         python dse_bot.py
-        python dse_reports_scraper.py
+        python scrapers/dse_reports_scraper.py
     - name: Install dependencies
       run: |
        pip install --upgrade pip
