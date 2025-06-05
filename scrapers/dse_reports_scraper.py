@@ -128,7 +128,11 @@ def save_metrics_to_csv(metrics_list, csv_path=CSV_OUTPUT):
         for data in metrics_list:
             writer.writerow(data)
 
-if __name__ == "__main__":
+import time
+import schedule
+
+def job():
+    print("Running scheduled scraper job...")
     links = fetch_report_links()
     downloaded_files = download_reports(links)
 
@@ -144,3 +148,11 @@ if __name__ == "__main__":
 
     save_metrics_to_csv(all_metrics)
     print(f"✅ Done! Financial metrics saved to {CSV_OUTPUT}")
+
+# Schedule job every day at 7:00 am
+schedule.every().day.at("07:00").do(job)
+
+print("Scheduler started. Waiting for jobs...")
+while True:
+    schedule.run_pending()
+    time.sleep(60)
